@@ -1703,18 +1703,28 @@ export function stripToolReferenceBlocksFromUserMessage(
         }
 
         // Filter out tool_reference blocks from tool_result content
-        const filteredContent = block.content.filter(
-          c => !isToolReferenceBlock(c),
+        const  toolRefNames: string[] = []
+        const filteredContent = block.content.filter(c => {
+          if (isToolReferenceBlock(c)) {
+            const ref = c as { type: 'tool_reference'; tool_name?: string }
+            if (ref.tool_name) toolRefNames.push(ref.tool_name)
+            return false
+          }
+          return true
+        }
         )
 
         // If all content was tool_reference blocks, replace with a placeholder
         if (filteredContent.length === 0) {
+          const text = toolRefNames.length > 0
+            ? `Found tools: ${toolRefNames.join(',')}. These tools are available and can be called directly.`
+            : '[Tool references removed - tool search not enabled]'
           return {
             ...block,
             content: [
               {
                 type: 'text' as const,
-                text: '[Tool references removed - tool search not enabled]',
+                text: text,
               },
             ],
           }
