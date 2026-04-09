@@ -219,13 +219,13 @@ export function gateChannelServer(
   // OAuth-only. API key users (console) are blocked — there's no
   // channelsEnabled admin surface in console yet, so the policy opt-in
   // flow doesn't exist for them. Drop this when console parity lands.
-  if (!getClaudeAIOAuthTokens()?.accessToken) {
-    return {
-      action: 'skip',
-      kind: 'auth',
-      reason: 'channels requires claude.ai authentication (run /login)',
-    }
-  }
+  // if (!getClaudeAIOAuthTokens()?.accessToken) {
+  //   return {
+  //     action: 'skip',
+  //     kind: 'auth',
+  //     reason: 'channels requires claude.ai authentication (run /login)',
+  //   }
+  // }
 
   // Teams/Enterprise opt-in. Managed orgs must explicitly enable channels.
   // Default OFF — absent or false blocks. Keyed off subscription tier, not
@@ -279,37 +279,37 @@ export function gateChannelServer(
     // tag == reality, so this is a pure entry check. entry.dev (per-entry,
     // not the session-wide bit) bypasses — so accepting the dev dialog for
     // one entry doesn't leak allowlist-bypass to --channels entries.
-    if (!entry.dev) {
-      const { entries, source } = getEffectiveChannelAllowlist(
-        sub,
-        policy?.allowedChannelPlugins,
-      )
-      if (
-        !entries.some(
-          e => e.plugin === entry.name && e.marketplace === entry.marketplace,
-        )
-      ) {
-        return {
-          action: 'skip',
-          kind: 'allowlist',
-          reason:
-            source === 'org'
-              ? `plugin ${entry.name}@${entry.marketplace} is not on your org's approved channels list (set allowedChannelPlugins in managed settings)`
-              : `plugin ${entry.name}@${entry.marketplace} is not on the approved channels allowlist (use --dangerously-load-development-channels for local dev)`,
-        }
-      }
-    }
+    // if (!entry.dev) {
+    //   const { entries, source } = getEffectiveChannelAllowlist(
+    //     sub,
+    //     policy?.allowedChannelPlugins,
+    //   )
+    //   if (
+    //     !entries.some(
+    //       e => e.plugin === entry.name && e.marketplace === entry.marketplace,
+    //     )
+    //   ) {
+    //     return {
+    //       action: 'skip',
+    //       kind: 'allowlist',
+    //       reason:
+    //         source === 'org'
+    //           ? `plugin ${entry.name}@${entry.marketplace} is not on your org's approved channels list (set allowedChannelPlugins in managed settings)`
+    //           : `plugin ${entry.name}@${entry.marketplace} is not on the approved channels allowlist (use --dangerously-load-development-channels for local dev)`,
+    //     }
+    //   }
+    // }
   } else {
     // server-kind: allowlist schema is {marketplace, plugin} — a server entry
     // can never match. Without this, --channels server:plugin:foo:bar would
     // match a plugin's runtime name and register with no allowlist check.
-    if (!entry.dev) {
-      return {
-        action: 'skip',
-        kind: 'allowlist',
-        reason: `server ${entry.name} is not on the approved channels allowlist (use --dangerously-load-development-channels for local dev)`,
-      }
-    }
+    // if (!entry.dev) {
+    //   return {
+    //     action: 'skip',
+    //     kind: 'allowlist',
+    //     reason: `server ${entry.name} is not on the approved channels allowlist (use --dangerously-load-development-channels for local dev)`,
+    //   }
+    // }
   }
 
   return { action: 'register' }

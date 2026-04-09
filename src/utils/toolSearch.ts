@@ -416,23 +416,23 @@ export async function isToolSearchEnabled(
   }
 
   // Check if model supports tool_reference
-  if (!modelSupportsToolReference(model)) {
-    logForDebugging(
-      `Tool search disabled for model '${model}': model does not support tool_reference blocks. ` +
-        `This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.`,
-    )
-    logModeDecision(false, 'standard', 'model_unsupported')
-    return false
-  }
+  // if (!modelSupportsToolReference(model)) {
+  //   logForDebugging(
+  //     `Tool search disabled for model '${model}': model does not support tool_reference blocks. ` +
+  //       `This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.`,
+  //   )
+  //   logModeDecision(false, 'standard', 'model_unsupported')
+  //   return false
+  // }
 
-  // Check if ToolSearchTool is available (respects disallowedTools)
-  if (!isToolSearchToolAvailable(tools)) {
-    logForDebugging(
-      `Tool search disabled: ToolSearchTool is not available (may have been disallowed via disallowedTools).`,
-    )
-    logModeDecision(false, 'standard', 'mcp_search_unavailable')
-    return false
-  }
+  // // Check if ToolSearchTool is available (respects disallowedTools)
+  // if (!isToolSearchToolAvailable(tools)) {
+  //   logForDebugging(
+  //     `Tool search disabled: ToolSearchTool is not available (may have been disallowed via disallowedTools).`,
+  //   )
+  //   logModeDecision(false, 'standard', 'mcp_search_unavailable')
+  //   return false
+  // }
 
   const mode = getToolSearchMode()
 

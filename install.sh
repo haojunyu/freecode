@@ -146,34 +146,49 @@ link_binary() {
 # Main
 # -------------------------------------------------------------------
 
-header
-info "Starting installation..."
-echo ""
+# header
+# info "Starting installation..."
+# echo ""
 
-check_os
-check_git
-check_bun
-echo ""
+# check_os
+# check_git
+# check_bun
+# echo ""
 
-clone_repo
-install_deps
-build_binary
-link_binary
+# clone_repo
+# install_deps
+# build_binary
+# link_binary
 
-echo ""
-printf "${GREEN}${BOLD}  Installation complete!${RESET}\n"
-echo ""
-printf "  ${BOLD}Run it:${RESET}\n"
-printf "    ${CYAN}free-code${RESET}                          # interactive REPL\n"
-printf "    ${CYAN}free-code -p \"your prompt\"${RESET}          # one-shot mode\n"
-echo ""
-printf "  ${BOLD}Set your API key:${RESET}\n"
-printf "    ${CYAN}export ANTHROPIC_API_KEY=\"sk-ant-...\"${RESET}\n"
-echo ""
-printf "  ${BOLD}Or log in with Claude.ai:${RESET}\n"
-printf "    ${CYAN}free-code /login${RESET}\n"
-echo ""
-printf "  ${DIM}Source: $INSTALL_DIR${RESET}\n"
-printf "  ${DIM}Binary: $INSTALL_DIR/cli-dev${RESET}\n"
-printf "  ${DIM}Link:   ~/.local/bin/free-code${RESET}\n"
-echo ""
+# echo ""
+# printf "${GREEN}${BOLD}  Installation complete!${RESET}\n"
+# echo ""
+# printf "  ${BOLD}Run it:${RESET}\n"
+# printf "    ${CYAN}free-code${RESET}                          # interactive REPL\n"
+# printf "    ${CYAN}free-code -p \"your prompt\"${RESET}          # one-shot mode\n"
+# echo ""
+# printf "  ${BOLD}Set your API key:${RESET}\n"
+# printf "    ${CYAN}export ANTHROPIC_API_KEY=\"sk-ant-...\"${RESET}\n"
+# echo ""
+# printf "  ${BOLD}Or log in with Claude.ai:${RESET}\n"
+# printf "    ${CYAN}free-code /login${RESET}\n"
+# echo ""
+# printf "  ${DIM}Source: $INSTALL_DIR${RESET}\n"
+# printf "  ${DIM}Binary: $INSTALL_DIR/cli-dev${RESET}\n"
+# printf "  ${DIM}Link:   ~/.local/bin/free-code${RESET}\n"
+# echo ""
+
+
+
+WORK_DIR="/mnt/fbdata/coder/freecode"
+build_binary_and_install() {
+  info "Building free-code (all experimental features enabled)..."
+  cd "$WORK_DIR"
+  bun run build:dev:full
+  ok "Binary built: $WORK_DIR/cli-dev"
+  local link_dir="$HOME/.local/bin"
+  mv $WORK_DIR"/cli-dev" $link_dir"/freecode"
+  info "move freecode to $link_dir"
+}
+
+build_binary_and_install

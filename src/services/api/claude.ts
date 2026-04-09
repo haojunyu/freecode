@@ -187,6 +187,7 @@ import {
   extractDiscoveredToolNames,
   isDeferredToolsDeltaEnabled,
   isToolSearchEnabled,
+  modelSupportsToolReference,
 } from 'src/utils/toolSearch.js'
 import { API_MAX_MEDIA_PER_REQUEST } from '../../constants/apiLimits.js'
 import { ADVISOR_BETA_HEADER } from '../../constants/betas.js'
@@ -1125,6 +1126,8 @@ async function* queryModel(
     'query',
   )
 
+  const useToolReference = useToolSearch && modelSupportsToolReference(resolvedModel)
+
   // Precompute once — isDeferredTool does 2 GrowthBook lookups per call
   const deferredToolNames = new Set<string>()
   if (useToolSearch) {
@@ -1151,8 +1154,8 @@ async function* queryModel(
   // ToolSearchTool returns tool_reference blocks which unsupported models can't handle
   let filteredTools: Tools
 
-  if (useToolSearch) {
-    // Dynamic tool loading: Only include deferred tools that have been discovered
+  if (useToolReference) {
+    // Full tool_reference support: Only include deferred tools that have been discovered
     // via tool_reference blocks in the message history. This eliminates the need
     // to predeclare all deferred tools upfront and removes limits on tool quantity.
     const discoveredToolNames = extractDiscoveredToolNames(messages)
@@ -1165,16 +1168,18 @@ async function* queryModel(
       // Only include deferred tools that have been discovered
       return discoveredToolNames.has(tool.name)
     })
+  } else if (useToolSearch) {
+    filteredTools = tools
   } else {
     filteredTools = tools.filter(
       t => !toolMatchesName(t, TOOL_SEARCH_TOOL_NAME),
     )
   }
 
-  // Add tool search beta header if enabled - required for defer_loading to be accepted
+  // Add tool search beta header if tool_reference is enabled - required for defer_loading to be accepted
   // Header differs by provider: 1P/Foundry use advanced-tool-use, Vertex/Bedrock use tool-search-tool
   // For Bedrock, this header must go in extraBodyParams, not the betas array
-  const toolSearchHeader = useToolSearch ? getToolSearchBetaHeader() : null
+  const toolSearchHeader = useToolReference ? getToolSearchBetaHeader() : null
   if (toolSearchHeader && getAPIProvider() !== 'bedrock') {
     if (!betas.includes(toolSearchHeader)) {
       betas.push(toolSearchHeader)
@@ -1206,7 +1211,7 @@ async function* queryModel(
 
   const useGlobalCacheFeature = shouldUseGlobalCacheScope()
   const willDefer = (t: Tool) =>
-    useToolSearch && (deferredToolNames.has(t.name) || shouldDeferLspTool(t))
+    useToolReference && (deferredToolNames.has(t.name) || shouldDeferLspTool(t))
   // MCP tools are per-user → dynamic tool section → can't globally cache.
   // Only gate when an MCP tool will actually render (not defer_loading).
   const needsToolBasedCacheMarker =
@@ -1246,12 +1251,19 @@ async function* queryModel(
   )
 
   if (useToolSearch) {
-    const includedDeferredTools = count(filteredTools, t =>
-      deferredToolNames.has(t.name),
-    )
-    logForDebugging(
-      `Dynamic tool loading: ${includedDeferredTools}/${deferredToolNames.size} deferred tools included`,
-    )
+    if (useToolReference) {
+      const includedDeferredTools = count(filteredTools, t =>
+        deferredToolNames.has(t.name),
+      )
+      logForDebugging(
+        `Dynamic tool loading: ${includedDeferredTools}/${deferredToolNames.size} deferred tools included`,
+      )
+    } else {
+      logForDebugging(
+        `Tool search fallback model: all ${filteredTools.length} tools sent (model does not support tool_reference)`,
+      )
+    }
+
   }
 
   queryCheckpoint('query_tool_schema_build_end')
@@ -1280,7 +1292,7 @@ async function* queryModel(
   // Note: For assistant messages, normalizeMessagesForAPI already normalized the
   // tool inputs, so stripCallerFieldFromAssistantMessage only needs to remove the
   // 'caller' field (not re-normalize inputs).
-  if (!useToolSearch) {
+  if (!useToolReference) {
     messagesForAPI = messagesForAPI.map(msg => {
       switch (msg.type) {
         case 'user':
@@ -1327,7 +1339,7 @@ async function* queryModel(
   // When the delta attachment is enabled, deferred tools are announced
   // via persisted deferred_tools_delta attachments instead of this
   // ephemeral prepend (which busts cache whenever the pool changes).
-  if (useToolSearch && !isDeferredToolsDeltaEnabled()) {
+  if (useToolReference && !isDeferredToolsDeltaEnabled()) {
     const deferredToolList = tools
       .filter(t => deferredToolNames.has(t.name))
       .map(formatDeferredToolLine)

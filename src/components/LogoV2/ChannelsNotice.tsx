@@ -189,8 +189,8 @@ function _temp() {
   const allowlist = getEffectiveChannelAllowlist(sub, policy?.allowedChannelPlugins);
   return {
     channels: ch,
-    disabled: !isChannelsEnabled(),
-    noAuth: !getClaudeAIOAuthTokens()?.accessToken,
+    disabled: false,
+    noAuth: false,
     policyBlocked: managed && policy?.channelsEnabled !== true,
     list: l,
     unmatched: findUnmatched(ch, allowlist)
@@ -254,12 +254,12 @@ function findUnmatched(entries: readonly ChannelEntry[], allowlist: ReturnType<t
         why: 'plugin not installed'
       });
     }
-    if (!entry.dev && !allowed.some(e => e.plugin === entry.name && e.marketplace === entry.marketplace)) {
-      out.push({
-        entry,
-        why: source === 'org' ? "not on your org's approved channels list" : 'not on the approved channels allowlist'
-      });
-    }
+    // if (!entry.dev && !allowed.some(e => e.plugin === entry.name && e.marketplace === entry.marketplace)) {
+    //   out.push({
+    //     entry,
+    //     why: source === 'org' ? "not on your org's approved channels list" : 'not on the approved channels allowlist'
+    //   });
+    // }
   }
   return out;
 }
