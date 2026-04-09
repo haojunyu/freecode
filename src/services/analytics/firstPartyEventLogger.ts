@@ -24,7 +24,7 @@ export function shouldSampleEvent(_eventName: string): number | null {
 export async function shutdown1PEventLogging(): Promise<void> {}
 
 export function is1PEventLoggingEnabled(): boolean {
-  return false
+  return true;
 }
 
 export function logEventTo1P(
